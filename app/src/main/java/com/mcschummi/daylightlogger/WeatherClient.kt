@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -183,7 +184,8 @@ object WeatherClient {
         false
     }
 
-    private fun parseAndStore(json: String): Boolean = try {
+    private fun parseAndStore(json: String): Boolean {
+        return try {
         val root = JSONObject(json)
         val hourly = root.getJSONObject("hourly")
         val times = hourly.getJSONArray("time")
@@ -220,9 +222,10 @@ object WeatherClient {
         )
         Log.i(TAG, statusText)
         true
-    } catch (e: Exception) {
-        Log.w(TAG, "weather parse failed", e)
-        false
+        } catch (e: Exception) {
+            Log.w(TAG, "weather parse failed", e)
+            false
+        }
     }
 
     /** Are the current capabilities good enough for a fetch right now? */
