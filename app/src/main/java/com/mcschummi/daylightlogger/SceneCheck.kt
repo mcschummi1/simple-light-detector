@@ -31,7 +31,8 @@ object SceneCheck {
      * coordinates (col 0 = viewer's left, row 0 = top) and mapped back into
      * raw pixel coordinates before sampling.
      */
-    fun analyze(image: Image): Report? = try {
+    fun analyze(image: Image): Report? {
+        return try {
         val plane = image.planes[0]
         val buf = plane.buffer
         val rowStride = plane.rowStride
@@ -103,7 +104,8 @@ object SceneCheck {
             else -> ""
         }
         Report(openPct, darkSide)
-    } catch (_: Exception) {
-        null
+        } catch (_: Exception) {
+            null
+        }
     }
 }
