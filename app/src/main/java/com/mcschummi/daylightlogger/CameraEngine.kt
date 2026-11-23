@@ -2,6 +2,7 @@ package com.mcschummi.daylightlogger
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -15,6 +16,8 @@ import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
 import java.util.ArrayDeque
+
+import android.hardware.camera2.params.MeteringRectangle
 
 /**
  * Owns the Camera2 camera. The (optional) preview surface from the main screen and
@@ -47,12 +50,17 @@ object CameraEngine {
     private val recentFrames = ArrayDeque<FrameStat>()
     private var sampleScheduled = false
     private var restartAttempts = 0
+    private var lastSceneCheckMs = 0L
 
     @Volatile var isOpen = false
         private set
 
     // Info for the Settings screen ("camera details" box)
     var cameraInfoText = "camera not open"
+        private set
+
+    /** True if the camera supports AE metering regions (center weighting). */
+    @Volatile var aeMeteringSupported = false
         private set
 
     /** Called from the UI thread or the service. Safe to call again. */
@@ -97,6 +105,9 @@ object CameraEngine {
         workerThread?.quitSafely()
         workerThread = null; workerHandler = null
         recentFrames.clear()
+        lastSceneCheckMs = 0
+        LogState.viewOpenPct = -1
+        LogState.viewDarkSide = ""
         cameraInfoText = "camera closed"
     }
 
@@ -185,11 +196,23 @@ object CameraEngine {
             IMAGE_WIDTH, IMAGE_HEIGHT,
             android.graphics.ImageFormat.YUV_420_888, 2
         )
-        // We never decode the images: this surface only exists so the capture
-        // request has a target. The numbers we need come from the capture result.
+        // We normally never decode the images: this surface only exists so the
+        // capture request has a target; the numbers come from the capture result.
+        // BUT once per second we DO look at the image (via SceneCheck) to tell
+        // open sky apart from a blocking wall.
         r.setOnImageAvailableListener({ imgReader ->
             val img = try { imgReader.acquireLatestImage() } catch (_: Exception) { null }
-            try { img?.close() } catch (_: Exception) {}
+            if (img != null) {
+                val now = System.currentTimeMillis()
+                if (now - lastSceneCheckMs > 1000) {
+                    lastSceneCheckMs = now
+                    SceneCheck.analyze(img)?.let { rep ->
+                        LogState.viewOpenPct = rep.openPct
+                        LogState.viewDarkSide = rep.darkSide
+                    }
+                }
+                try { img.close() } catch (_: Exception) {}
+            }
         }, workerHandler)
         reader = r
     }
@@ -226,7 +249,8 @@ object CameraEngine {
 
         val builder = dev.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
         builder.addTarget(reader!!.surface)
-        if (previewSurface?.isValid == true) builder.addTarget(previewSurface)
+        val ps = previewSurface
+        if (ps != null && ps.isValid) builder.addTarget(ps)
         // Auto exposure does all the work; we only read the result afterwards.
         builder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
         builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
@@ -234,6 +258,35 @@ object CameraEngine {
         builder.set(CaptureRequest.CONTROL_AE_LOCK, false)
         builder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE,
             CaptureRequest.STATISTICS_FACE_DETECT_MODE_OFF)
+
+        // AE METERING: the window view has a huge dark wall on the right half.
+        // If AE averages the whole frame it overexposes the sky and ruins EV100.
+        // So point the meter at the CENTER of the frame (CENTER weighted region)
+        // when the camera supports AE regions; on LIMITED cameras it often does.
+        val maxAeRegions = chars.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE) ?: 0
+        val active = chars.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+        if (maxAeRegions > 0 && active != null) {
+            try {
+                val cw = active.width() / 4
+                val ch = active.height() / 4
+                val rect = Rect(
+                    active.left + (active.width() - cw) / 2,
+                    active.top + (active.height() - ch) / 2,
+                    active.left + (active.width() + cw) / 2,
+                    active.top + (active.height() + ch) / 2
+                )
+                builder.set(
+                    CaptureRequest.CONTROL_AE_REGIONS,
+                    arrayOf(MeteringRectangle(rect, 1000))
+                )
+                aeMeteringSupported = true
+            } catch (e: Exception) {
+                Log.w(TAG, "center AE metering not applied", e)
+                aeMeteringSupported = false
+            }
+        } else {
+            aeMeteringSupported = false
+        }
 
         try {
             s.setRepeatingRequest(builder.build(), captureCallback, workerHandler)
@@ -256,10 +309,13 @@ object CameraEngine {
             CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> "LEVEL_3"
             else -> "EXTERNAL"
         }
-        val isoRange = chars.get(CameraCharacteristics.SENSOR_MAX_SENSITIVITY) ?: 0
+        val isoMax = chars.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)?.upper ?: 0
         val apertures = chars.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES)
+        val maxAeRegions = chars.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE) ?: 0
+        aeMeteringSupported = maxAeRegions > 0
         cameraInfoText = "Camera id=$camId, hardware level: $hw, " +
-                "max ISO: $isoRange, lenses: ${apertures?.contentToString()}"
+                "max ISO: $isoMax, lenses: ${apertures?.contentToString()}, " +
+                "AE metering regions: $maxAeRegions"
     }
 
     private val captureCallback = object : CameraCaptureSession.CaptureCallback() {
@@ -324,7 +380,8 @@ object CameraEngine {
                 try {
                     val saturated = ev >= profile.saturationEv100
                     CsvStore.appendSample(
-                        context, meanExposure, meanIso, meanAperture, ev, lux, ppfd, saturated
+                        context, meanExposure, meanIso, meanAperture, ev, lux, ppfd,
+                        saturated, LogState.viewOpenPct, k
                     )
                 } catch (e: Exception) {
                     Log.e(TAG, "CSV write failed", e)

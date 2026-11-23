@@ -28,8 +28,14 @@ DLI   = sum(ppfd * interval_s) / 1,000,000   (mol/m2/day, today so far)
 
   `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated`
 
-  The `saturated` column is `true` for samples taken in direct sun where the
-  tiny J3 sensor maxed out - those rows underestimate the real light level.
+  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated, view_open_pct, calibration_k`
+
+  The `saturated` column is `true` for samples taken with bright direct sun in
+  view (sensor maxing out - those rows underestimate real light).
+  `view_open_pct` (0-100, empty if unknown) shows how much of the view was open
+  sky - a low value means something (a wall) blocked part of the view, which
+  pushes auto-exposure and thus the lux numbers too HIGH.
+  `calibration_k` records the exact k multiplier used for that sample.
 
   "Export CSV" shares today's file through the system share sheet.
   "Clear data" (in Settings and on the main screen) deletes everything after a
@@ -54,9 +60,19 @@ mode** you can force it:
 ## Accuracy notes
 
 Readings are **approximate (about ±30%)** — a phone lens is not a real lux meter.
-**Direct sun will saturate the sensor.** Lay the phone flat, **face up**, with the
-back camera aimed straight up at the sky, or at a white sheet of paper for
-reflected light.
+**Place phone horizontally, back camera facing straight out the window.**
+
+- The window view has a large dark concrete wall on the right half. If the
+  camera supports AE metering regions the app meters the **center of the
+  frame** (the wall is largely ignored). If not, the main screen shows an
+  instruction: **aim the phone slightly to the LEFT, away from dark walls, to
+  prevent AE overexposure.**
+- The live **view check** (green/orange/red line on the main screen) analyses
+  the frame once per second and tells you how much open sky is visible and if a
+  dark zone is detected on the right/left - and it is stored per sample in the
+  CSV so blocked samples can be filtered out later.
+- While logging, the screen turns off normally (the partial wake lock keeps
+  only the CPU alive); keep the **keep screen on** switch OFF for windowsill runs.
 
 ## Build
 

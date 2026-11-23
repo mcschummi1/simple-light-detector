@@ -95,7 +95,9 @@ class SettingsActivity : AppCompatActivity() {
                     else -> "?"
                 }
                 sb.append("id=$id $facing hw=$hw ")
-                sb.append("maxISO=${c.get(CameraCharacteristics.SENSOR_MAX_SENSITIVITY)}\n")
+                sb.append(
+                    "maxISO=${c.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)?.upper}\n"
+                )
             }
             sb.toString().trim()
         } catch (e: Exception) {

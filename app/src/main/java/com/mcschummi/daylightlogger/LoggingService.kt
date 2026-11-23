@@ -52,7 +52,7 @@ class LoggingService : Service() {
 
     private fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) return
-        wakeLock = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DaylightLogger::wakelock")
         wakeLock?.acquire(26 * 60 * 60 * 1000L)   // just over 24h as a safety net
     }

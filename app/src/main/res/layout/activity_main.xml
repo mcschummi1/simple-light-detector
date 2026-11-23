@@ -119,6 +119,27 @@
                 android:textColor="@color/textDim"
                 android:textSize="13sp" />
 
+            <!-- Scene / view check: open sky vs blocked (wall, shadow, ...) -->
+            <TextView
+                android:id="@+id/txtViewCheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:text="@string/view_check_pending"
+                android:textColor="@color/textDim"
+                android:textSize="13sp" />
+
+            <!-- AE metering status / aim-left warning -->
+            <TextView
+                android:id="@+id/txtAeNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/ae_note_supported"
+                android:textColor="@color/textDim"
+                android:textSize="12sp" />
+
             <!-- Today's lux over time (custom Canvas chart) -->
             <com.mcschummi.daylightlogger.LuxChartView
                 android:id="@+id/chart"

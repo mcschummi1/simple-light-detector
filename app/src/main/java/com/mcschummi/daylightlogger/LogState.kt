@@ -17,6 +17,11 @@ object LogState {
     var exposureUsedS = 0.0
     var sampleCountToday = 0
 
+    // View check from SceneCheck: % of the camera view that is open sky
+    // (-1 = unknown / camera not running) and where a dark blocking zone is.
+    @Volatile var viewOpenPct = -1
+    @Volatile var viewDarkSide = ""
+
     // Today's Daily Light Integral (mol/m2/day)
     var dliToday = 0.0
     var maxLuxToday = 0.0
@@ -54,6 +59,8 @@ object LogState {
         maxLuxToday = 0.0
         sampleCountToday = 0
         luxHistory.clear()
+        viewOpenPct = -1
+        viewDarkSide = ""
     }
 
     fun resetAll() {

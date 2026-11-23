@@ -26,13 +26,21 @@
     <string name="dli_value">DLI today: %1$.2f mol/m²/day</string>
     <string name="k_value">k = %1$.3f</string>
 
+    <string name="view_check_pending">View check: waiting for the camera…</string>
+    <string name="view_check">View check: %1$d%% open sky%2$s</string>
+    <string name="view_clear"> ✓ good aim</string>
+    <string name="view_partial"> — re-aim towards open sky for best accuracy</string>
+    <string name="view_side_right"> — dark zone on the RIGHT (a wall?) readings will read too high!</string>
+    <string name="view_side_left"> — dark zone on the LEFT (a wall?) readings will read too high!</string>
+    <string name="view_side_bottom"> — lower view is dark; something is shadowing the camera</string>
+
     <string name="status_stopped">Not logging - press Start</string>
     <string name="status_first_sample">Logging: waiting for first sample…</string>
     <string name="status_live">Live · %1$d logged today · peak %2$.0f lux</string>
     <string name="status_running">Log %1$s: %2$d samples</string>
     <string name="saturated"> ⚠ direct sun (sensor saturating!)</string>
     <string name="camera_needed">Camera permission is required to measure light.</string>
-    <string name="started_toast">Logging started - keep the phone face up</string>
+    <string name="started_toast">Logging started - back camera facing straight out the window</string>
     <string name="stopped_toast">Logging stopped</string>
     <string name="no_data">No data yet today.</string>
 
@@ -45,7 +53,9 @@
     <string name="clear_yes">Delete</string>
     <string name="cleared_toast">All data cleared</string>
 
-    <string name="disclaimer">Readings are approximate (around ±30%): the phone lens is not a real lux meter. Direct sunlight will saturate the sensor. Lie the phone flat, face up, the back camera aimed straight at the sky or at a white sheet of paper.</string>
+    <string name="disclaimer">Readings are approximate (around ±30%): the phone lens is not a real lux meter. Bright direct sunlight in view can saturate the sensor. Place phone horizontally, back camera facing straight out the window.</string>
+    <string name="ae_note_unsupported">This phone has NO AE metering-region support: aim the phone slightly to the LEFT, away from dark walls, to prevent AE overexposure.</string>
+    <string name="ae_note_supported">AE metering: center of frame (dark wall on the right is partly ignored).</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
@@ -76,7 +86,7 @@
     <string name="calib_no_points">No calibration points stored yet. k defaults to the manual value in Settings.</string>
     <string name="calib_points_header">Stored calibration points (average is used):</string>
     <string name="calib_avg">Average k in use: %1$.3f</string>
-    <string name="calib_explain">Put this phone and your reference device side by side under the same light, camera up. Type the reference lux value and add the point. Add 2–3 points in different light (shade, bright, sun) for a better average.</string>
+    <string name="calib_explain">Hold this phone and your reference device side by side, both back cameras facing straight out the window at the same spot. Type the reference lux value and add the point. Add 2–3 points in different light (cloudy, bright, evening) for a better average.</string>
     <string name="bad_ref_lux">Enter the reference lux as a positive number.</string>
     <string name="calib_saved">Saved point: k = %1$.3f</string>
 </resources>

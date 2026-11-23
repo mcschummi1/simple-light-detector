@@ -42,6 +42,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var txtPpfd: TextView
     private lateinit var txtDli: TextView
     private lateinit var txtK: TextView
+    private lateinit var txtViewCheck: TextView
+    private lateinit var txtAeNote: TextView
     private lateinit var txtDevice: TextView
 
     private var previewEnabled = true   // stored only for this session
@@ -87,6 +89,8 @@ class MainActivity : AppCompatActivity() {
         txtPpfd = findViewById(R.id.txtPpfd)
         txtDli = findViewById(R.id.txtDli)
         txtK = findViewById(R.id.txtK)
+        txtViewCheck = findViewById(R.id.txtViewCheck)
+        txtAeNote = findViewById(R.id.txtAeNote)
         txtDevice = findViewById(R.id.txtDevice)
 
         val gear = findViewById<ImageButton>(R.id.btnGear)
@@ -106,6 +110,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // SCREEN OFF: with the keep-screen-on switch OFF (default), the screen
+        // sleeps after the system timeout while the service keeps logging with
+        // its partial wake lock (CPU on, screen off = good for 24 h runs).
+        if (Prefs.get(this).getBoolean(Prefs.KEY_KEEP_SCREEN_ON, false)) {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         if (!cameraPermissionGranted()) {
             // First run: ask the user for CAMERA (+ notifications on Android 13+).
             requestPermissions(
@@ -162,6 +174,10 @@ class MainActivity : AppCompatActivity() {
                 this, Intent(this, LoggingService::class.java)
             )
             Toast.makeText(this, R.string.started_toast, Toast.LENGTH_SHORT).show()
+            // 24+ h on a windowsill: the preview is not needed once logging runs.
+            // Drop it so the camera session runs reader-only and the screen can
+            // go dark (the partial wake lock keeps the CPU alive, not the screen).
+            hidePreview()
         }
         updateStartStopButton()
     }
@@ -279,6 +295,37 @@ class MainActivity : AppCompatActivity() {
         txtDli.text = getString(R.string.dli_value, st.dliToday)
         txtK.text = getString(R.string.k_value, Prefs.effectiveK(this))
         txtDevice.text = profile.label
+
+        // VIEW CHECK: how much of the view is open sky? A dark wall on one side
+        // makes auto-exposure read too high, so warn (and log it in the CSV).
+        val open = st.viewOpenPct
+        if (open < 0) {
+            txtViewCheck.text = getString(R.string.view_check_pending)
+            txtViewCheck.setTextColor(0xFF9E9E9E.toInt())
+        } else {
+            val sideText = when (st.viewDarkSide) {
+                "right" -> getString(R.string.view_side_right)
+                "left" -> getString(R.string.view_side_left)
+                "bottom" -> getString(R.string.view_side_bottom)
+                else -> if (open >= 80) getString(R.string.view_clear) else getString(R.string.view_partial)
+            }
+            txtViewCheck.text = getString(R.string.view_check, open, sideText)
+            txtViewCheck.setTextColor(
+                when {
+                    open >= 80 -> 0xFF2E7D32.toInt()
+                    open >= 50 -> 0xFFEF6C00.toInt()
+                    else -> 0xFFC62828.toInt()
+                }
+            )
+        }
+
+        // AE metering note: only if the camera cannot meter the center region
+        // the user MUST aim a bit off the dark wall or readings go too high.
+        txtAeNote.setText(
+            if (!CameraEngine.isOpen || CameraEngine.aeMeteringSupported)
+                R.string.ae_note_supported
+            else R.string.ae_note_unsupported
+        )
         chart.invalidate()   // redraw today's lux curve
     }
 
