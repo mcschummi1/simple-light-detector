@@ -561,7 +561,6 @@ object CameraEngine {
         if (frames.isEmpty()) return
         val intervalSec = (Prefs.intervalSeconds(context)).toDouble()
         val k = Prefs.effectiveK(context)
-        val profile = DeviceProfile.resolve(context)
 
         val meanExposure = trimmedMean(frames.map { it.exposureSeconds })
         val meanIso = trimmedMean(frames.map { it.iso })
@@ -570,14 +569,13 @@ object CameraEngine {
         val ev = LightMath.ev100(meanAperture, meanExposure, meanIso)
         val lux = LightMath.lux(ev, k)
         val ppfd = LightMath.ppfd(lux)
-        val saturated = ev >= profile.saturationEv100
 
-        val modeStr = buildString {
-            append(
-                if (LightStateMachine.mode == LightStateMachine.CapMode.MANUAL) "Manual"
-                else "Auto-Mode"     // fallback: driver ignored our manual settings
-            )
-            if (forced) append(" Forced-Save")
+        // CSV capture_status: Normal | Auto-Mode (driver ignored manual) |
+        // Forced-Save (the 20 s overtime safety net had to intervene).
+        val captureStatus = when {
+            forced -> "Forced-Save"
+            LightStateMachine.mode == LightStateMachine.CapMode.AUTO_FALLBACK -> "Auto-Mode"
+            else -> "Normal"
         }
 
         LogState.addSample(lux, ev, ppfd, meanIso, meanExposure, meanAperture, intervalSec)
@@ -585,7 +583,7 @@ object CameraEngine {
             try {
                 CsvStore.appendSample(
                     context, meanExposure, meanIso, meanAperture, ev, lux, ppfd,
-                    saturated, LogState.viewOpenPct, k, modeStr
+                    k, WeatherClient.latest, captureStatus
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "CSV write failed", e)

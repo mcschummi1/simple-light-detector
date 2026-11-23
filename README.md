@@ -26,16 +26,12 @@ DLI   = sum(ppfd * interval_s) / 1,000,000   (mol/m2/day, today so far)
   partial wake lock. The camera reopens automatically if it is disconnected.
 - **CSV log**: one ISO-8601-stamped CSV per day in app storage:
 
-  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated`
+  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, calibration_k, cloud_cover_pct, uv_index, weather_temp_c, capture_status`
 
-  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated, view_open_pct, calibration_k, mode`
-
-  The `saturated` column is `true` for samples taken with bright direct sun in
-  view (sensor maxing out - those rows underestimate real light).
-  `view_open_pct` (0-100, empty if unknown) shows how much of the view was open
-  sky - a low value means something (a wall) blocked part of the view.
-  `calibration_k` records the exact k multiplier used for that sample.
-  `mode` is `Manual`, `Auto-Mode`, each possibly suffixed ` Forced-Save`.
+  `calibration_k` records the exact k multiplier used for that sample;
+  `cloud_cover_pct` / `uv_index` / `weather_temp_c` come from Open-Meteo
+  (or `Pending` while offline); `capture_status` is `Normal`, `Auto-Mode`
+  (driver ignored manual exposure) or `Forced-Save` (20 s overtime net).
 
   "Export CSV" shares today's file through the system share sheet.
   "Clear data" (in Settings and on the main screen) deletes everything after a
@@ -106,15 +102,29 @@ Readings are **approximate (about ±30%)** — a phone lens is not a real lux me
 4. Calibrate once in **⚙ Settings → Calibration** using a known lux value.
 5. Use **Export CSV** to share the data (WhatsApp, Drive, email, …).
 
+## Weather context (Open-Meteo)
+
+Every CSV row is annotated with the current weather from the free
+[Open-Meteo](https://open-meteo.com) API (no key needed) for Timișoara
+(45.7489, 21.2087): hourly **cloud cover (%), UV index and temperature**.
+Fetches run on Kotlin Coroutines in the background (never blocking the camera
+loop), retry with exponential backoff (30 s → 1 m → 2 m → 4 m → 8 m, max 5
+attempts), and fire an immediate retry the moment Wi-Fi reconnects. While
+offline, rows contain the last known values or `Pending`.
+
 ## Releases, versions and updating
 
-- Version is **v0.1.0** (`versionName "0.1.0"`, `versionCode 1`).
+- Version is **v0.3.0** (`versionName "0.3.0"`, `versionCode 3`).
 - GitHub Actions builds a debug APK on every push (see the **CI** tab) and
   publishes a GitHub **Release** with the APK whenever a `vX.Y.Z` tag is pushed.
 - Updating: install the new APK over the old one — no uninstall needed — as
   long as the `applicationId` is unchanged and `versionCode` was bumped.
+- In-app: **⚙ Settings → Update log / older versions** lists every release
+  with notes and an "Open release" button to download older APKs (downgrading
+  needs a quick uninstall first).
 - To cut a release: bump `versionCode` (and `versionName`) in
   `app/build.gradle`, commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+- Change history: see [CHANGELOG.md](CHANGELOG.md).
 
 ## Project layout
 

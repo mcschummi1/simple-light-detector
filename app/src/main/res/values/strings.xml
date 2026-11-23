@@ -91,4 +91,13 @@
     <string name="calib_explain">Hold this phone and your reference device side by side, both back cameras facing straight out the window at the same spot. Type the reference lux value and add the point. Add 2–3 points in different light (cloudy, bright, evening) for a better average.</string>
     <string name="bad_ref_lux">Enter the reference lux as a positive number.</string>
     <string name="calib_saved">Saved point: k = %1$.3f</string>
+
+    <!-- Update log screen -->
+    <string name="update_log_title">Update log</string>
+    <string name="update_log_hint">Every released version with its changes. The button opens the GitHub release where the .apk can be downloaded (newer versions install over the old one; going back to an older version needs a quick uninstall first).</string>
+    <string name="update_log_open_release">Open release %1$s</string>
+
+    <!-- Settings: weather + update log -->
+    <string name="weather_status_title">Weather (Open-Meteo, Timișoara)</string>
+    <string name="open_update_log">Update log / older versions…</string>
 </resources>

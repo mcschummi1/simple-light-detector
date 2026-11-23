@@ -39,12 +39,15 @@ class LoggingService : Service() {
         acquireWakeLock()
         // Open the camera (or reuse it if the preview already opened it).
         CameraEngine.start(this)
+        // Weather context for the CSV (async, never blocks the camera loop).
+        WeatherClient.start(this)
         return START_STICKY   // relaunch if the system kills us overnight
     }
 
     override fun onDestroy() {
         LogState.logging = false
         releaseWakeLock()
+        WeatherClient.stop()
         // Only close the camera if it wasn't needed for the visible preview.
         CameraEngine.stop()
         super.onDestroy()

@@ -57,10 +57,14 @@ class SettingsActivity : AppCompatActivity() {
             android.os.Build.MANUFACTURER, android.os.Build.MODEL,
             if (DeviceProfile.isGalaxyJ3_2017()) "yes" else "no", profile.label
         )
+        findViewById<TextView>(R.id.txtWeatherStatus).text = WeatherClient.statusText
         txtCameraInfo.text = getString(R.string.camera_info_prefix) + "\n" + cameraDetails()
 
         findViewById<Button>(R.id.btnCalibration).setOnClickListener {
             startActivity(Intent(this, CalibrationActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnUpdateLog).setOnClickListener {
+            startActivity(Intent(this, UpdateLogActivity::class.java))
         }
         findViewById<Button>(R.id.btnExport).setOnClickListener {
             val file = CsvStore.todayFile(this)

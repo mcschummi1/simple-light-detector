@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Persistent "logging" notification on Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Open-Meteo weather context (no API key needed) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- This app NEEDS a camera. It cannot be installed on cameras-less devices. -->
     <uses-feature android:name="android.hardware.camera" android:required="true" />
@@ -44,6 +47,12 @@
             android:name=".CalibrationActivity"
             android:exported="false"
             android:label="Calibration" />
+
+        <!-- Update log: every version + download links to older releases -->
+        <activity
+            android:name=".UpdateLogActivity"
+            android:exported="false"
+            android:label="Update log" />
 
         <!-- Long-running logger so samples continue with the screen off -->
         <service

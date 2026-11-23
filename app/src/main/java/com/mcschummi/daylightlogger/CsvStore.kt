@@ -8,19 +8,23 @@ import java.util.Locale
 
 /**
  * One CSV file per day, in app storage:
- *   /data/data/<pkg>/files/logs/daylight_2024-05-01.csv
+ *   /data/data/<pkg>/files/logs/daylight_2026-11-23.csv
  *
- * Columns: timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd,
- *          saturated, view_open_pct, calibration_k, mode
- * "saturated" is true when the EV hit the device's direct-sun limit (those
- * rows underestimate real light). "view_open_pct" (0-100, empty if unknown)
- * tells how much of the camera view was open sky - a low value means something
- * blocked part of the view, which makes auto-exposure read too HIGH.
- * "calibration_k" is the k multiplier that was in effect for that sample.
- * "mode" is Manual, Auto-Mode (driver ignored manual exposure), each possibly
- * suffixed with " Forced-Save" (overtime safety net kicked in).
+ * EXACT columns (v0.3.0):
+ *   timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd,
+ *   calibration_k, cloud_cover_pct, uv_index, weather_temp_c, capture_status
+ *
+ * calibration_k : the k multiplier in effect for that sample.
+ * cloud_cover_pct / uv_index / weather_temp_c : Open-Meteo weather for the
+ *   sample hour, or 'Pending' while offline.
+ * capture_status: Normal | Auto-Mode (driver ignored manual exposure) |
+ *   Forced-Save (20 s overtime safety net kicked in).
  */
 object CsvStore {
+
+    private const val HEADER =
+        "timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd," +
+        "calibration_k,cloud_cover_pct,uv_index,weather_temp_c,capture_status"
 
     private fun dir(context: Context): File {
         val d = File(context.filesDir, "logs")
@@ -39,25 +43,24 @@ object CsvStore {
         context: Context,
         exposureSeconds: Double, iso: Double, aperture: Double,
         ev100: Double, lux: Double, ppfd: Double,
-        saturated: Boolean, viewOpenPct: Int, calibrationK: Double,
-        mode: String
+        calibrationK: Double,
+        weather: WeatherClient.Snapshot?,
+        captureStatus: String
     ): File {
         val f = todayFile(context)
         if (!f.exists()) {
-            f.writeText(
-                "timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd,saturated,view_open_pct,calibration_k,mode\n"
-            )
+            f.writeText(HEADER + "\n")
         }
         val ts = DeviceProfile.timestamp_ISO8601(System.currentTimeMillis())
         f.appendText(
             String.format(
                 Locale.US,
-                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f,%s,%s,%.3f,%s\n",
-                ts, exposureSeconds, iso, aperture, ev100, lux, ppfd,
-                if (saturated) "true" else "false",
-                if (viewOpenPct < 0) "" else viewOpenPct.toString(),
-                calibrationK,
-                mode
+                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f,%.3f,%s,%s,%s,%s\n",
+                ts, exposureSeconds, iso, aperture, ev100, lux, ppfd, calibrationK,
+                weather?.cloudPct?.toString() ?: "Pending",
+                weather?.uvIndex?.toString() ?: "Pending",
+                weather?.tempC?.toString() ?: "Pending",
+                captureStatus
             )
         )
         return f
