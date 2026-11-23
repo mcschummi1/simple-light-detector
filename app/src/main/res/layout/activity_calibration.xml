@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calibration screen: enter a reference lux, app computes k = ref / 2^EV100. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/calibration_title"
+            android:textColor="@color/textMain"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtExplain"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/textDim"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/txtCurrentEv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/textMain"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/calib_reference_label"
+            android:textColor="@color/textMain"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/editReference"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. 850"
+            android:inputType="numberDecimal" />
+
+        <Button
+            android:id="@+id/btnAddPoint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/calib_add" />
+
+        <TextView
+            android:id="@+id/txtPoints"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/textMain"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnClearPoints"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/calib_clear_points" />
+    </LinearLayout>
+</ScrollView>

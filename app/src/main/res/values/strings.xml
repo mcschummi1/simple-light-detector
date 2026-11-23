@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette -->
+    <color name="primary">#1565C0</color>
+    <color name="primaryDark">#0D47A1</color>
+    <color name="accent">#FFB300</color>
+    <color name="background">#FFFFFF</color>
+    <color name="textMain">#212121</color>
+    <color name="textDim">#616161</color>
+    <color name="ic_launcher_background">#1565C0</color>
+
+    <string name="app_name">Daylight Logger</string>
+
+    <!-- Main screen -->
+    <string name="start">Start logging</string>
+    <string name="stop">Stop logging</string>
+    <string name="show_preview">Show camera preview</string>
+    <string name="hide_preview">Hide camera preview</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="clear_data">Clear data</string>
+    <string name="settings">Settings</string>
+
+    <string name="lux_value">%1$.0f lux</string>
+    <string name="ev_value">EV100: %1$.2f</string>
+    <string name="ppfd_value">%1$.0f µmol/m²/s</string>
+    <string name="dli_value">DLI today: %1$.2f mol/m²/day</string>
+    <string name="k_value">k = %1$.3f</string>
+
+    <string name="status_stopped">Not logging - press Start</string>
+    <string name="status_first_sample">Logging: waiting for first sample…</string>
+    <string name="status_running">Logging %1$s: %2$d samples</string>
+    <string name="saturated"> ⚠ direct sun (sensor saturating!)</string>
+    <string name="camera_needed">Camera permission is required to measure light.</string>
+    <string name="started_toast">Logging started - keep the phone face up</string>
+    <string name="stopped_toast">Logging stopped</string>
+    <string name="no_data">No data yet today.</string>
+
+    <string name="chart_empty">No samples yet - today\'s lux chart appears here</string>
+    <string name="export_title">Export CSV</string>
+    <string name="export_subject">Daylight log CSV</string>
+
+    <string name="clear_title">Clear all data?</string>
+    <string name="clear_message">This deletes every saved CSV log file and resets today\'s DLI. It cannot be undone.</string>
+    <string name="clear_yes">Delete</string>
+    <string name="cleared_toast">All data cleared</string>
+
+    <string name="disclaimer">Readings are approximate (around ±30%): the phone lens is not a real lux meter. Direct sunlight will saturate the sensor. Lie the phone flat, face up, the back camera aimed straight at the sky or at a white sheet of paper.</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="interval_label">Sample interval (seconds, 5–3600)</string>
+    <string name="manual_k_label">Calibration constant k (used when no calibration points)</string>
+    <string name="device_mode_label">Device mode</string>
+    <string name="mode_auto">Auto (detect)</string>
+    <string name="mode_j3">Galaxy J3 (2017) - dedicated</string>
+    <string name="mode_generic">Other device - compatibility (optional)</string>
+    <string name="keep_screen_on">Keep screen on while app is open</string>
+    <string name="device_info_title">This phone</string>
+    <string name="device_info">Vendor: %1$s\nModel: %2$s\nGalaxy J3 (2017): %3$s\nProfile: %4$s</string>
+    <string name="camera_info_title">Camera details</string>
+    <string name="camera_info_prefix">Back camera is opened with pure auto-exposure (CONTROL_AE_MODE_ON, flash off, AE lock off); the app only reads back the exposure the camera chose.</string>
+    <string name="camera_details_error">Could not read camera characteristics.</string>
+    <string name="save">Save settings</string>
+    <string name="open_calibration">Calibration (k from reference lux)…</string>
+    <string name="bad_interval">Interval must be 5–3600 seconds.</string>
+    <string name="bad_k">k must be a positive number (typical: 1–10).</string>
+
+    <!-- Calibration screen -->
+    <string name="calibration_title">Calibration</string>
+    <string name="calib_current_ev">Current EV100 from camera: %1$.2f</string>
+    <string name="calib_no_camera">No camera reading yet - put the phone in daylight for about 10 seconds, or start logging on the main screen.</string>
+    <string name="calib_reference_label">Reference lux (from another light meter / app)</string>
+    <string name="calib_add">Add calibration point (k = ref / 2^EV)</string>
+    <string name="calib_clear_points">Remove all calibration points</string>
+    <string name="calib_no_points">No calibration points stored yet. k defaults to the manual value in Settings.</string>
+    <string name="calib_points_header">Stored calibration points (average is used):</string>
+    <string name="calib_avg">Average k in use: %1$.3f</string>
+    <string name="calib_explain">Put this phone and your reference device side by side under the same light, camera up. Type the reference lux value and add the point. Add 2–3 points in different light (shade, bright, sun) for a better average.</string>
+    <string name="bad_ref_lux">Enter the reference lux as a positive number.</string>
+    <string name="calib_saved">Saved point: k = %1$.3f</string>
+</resources>

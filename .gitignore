@@ -1,0 +1,9 @@
+# Build junk
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.DS_Store
