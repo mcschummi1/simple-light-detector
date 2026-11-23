@@ -1,5 +1,7 @@
 package com.mcschummi.daylightlogger
 
+import kotlin.math.log2
+
 /**
  * HYBRID AUTO-MANUAL EXPOSURE STATE MACHINE (pure logic, no Android calls).
  *
@@ -125,11 +127,11 @@ object LightStateMachine {
         var iso = manual.iso
         // Prefer turning exposure time; if at its limit, move ISO instead.
         if (t > limits.maxExposureNs) {
-            val overshoot = Math.log2(t / limits.maxExposureNs.toDouble())
+            val overshoot = log2(t / limits.maxExposureNs)
             t = limits.maxExposureNs.toDouble()
             iso = (iso * Math.pow(2.0, overshoot)).toInt().coerceIn(limits.minIso, limits.maxIso)
         } else if (t < limits.minExposureNs) {
-            val shortfall = Math.log2(limits.minExposureNs / t)
+            val shortfall = log2(limits.minExposureNs / t)
             t = limits.minExposureNs.toDouble()
             iso = (iso * Math.pow(2.0, -shortfall)).toInt().coerceIn(limits.minIso, limits.maxIso)
         }

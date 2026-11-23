@@ -219,7 +219,7 @@ object CameraEngine {
         val aeModes = chars.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES)
         val expRange = chars.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)
         val isoRange = chars.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)
-        val frameRange = chars.get(CameraCharacteristics.SENSOR_INFO_MAX_FRAME_DURATION_RANGE)
+        val frameRange = chars.get(CameraCharacteristics.SENSOR_INFO_MAX_FRAME_DURATION)
 
         manualHwSupported =
             aeModes?.contains(CameraCharacteristics.CONTROL_AE_MODE_OFF) == true &&
@@ -233,7 +233,7 @@ object CameraEngine {
                 maxExposureNs = minOf(expRange.upper, 100_000_000L),
                 minIso = maxOf(isoRange.lower, 50),
                 maxIso = isoRange.upper,
-                maxFrameDurationNs = frameRange?.upper ?: 200_000_000L
+                maxFrameDurationNs = frameRange ?: 200_000_000L
             )
         } else {
             LightStateMachine.Limits(1_000L, 100_000_000L, 100, 6400, 200_000_000L)
@@ -329,7 +329,8 @@ object CameraEngine {
         val chars = characteristics ?: cameraManager!!.getCameraCharacteristics(cameraId!!)
         val builder = dev.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
         builder.addTarget(reader!!.surface)
-        if (previewSurface?.isValid == true) builder.addTarget(previewSurface)
+        val ps = previewSurface
+        if (ps != null && ps.isValid) builder.addTarget(ps)
 
         if (LightStateMachine.mode == LightStateMachine.CapMode.MANUAL) {
             // HYBRID: manual exposure - the driver was verified to accept it.
@@ -390,7 +391,7 @@ object CameraEngine {
         val dev = device ?: return
         val s = session ?: return
         try {
-            s.setRepeatingRequest(buildRequest(dev), captureCallback, workerHandler)
+            s.setRepeatingRequest(buildRequest(dev).build(), captureCallback, workerHandler)
         } catch (e: Exception) {
             Log.e(TAG, "setRepeatingRequest failed", e)
         }
