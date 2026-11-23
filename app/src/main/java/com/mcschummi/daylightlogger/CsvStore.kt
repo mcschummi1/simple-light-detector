@@ -11,12 +11,14 @@ import java.util.Locale
  *   /data/data/<pkg>/files/logs/daylight_2024-05-01.csv
  *
  * Columns: timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd,
- *          saturated, view_open_pct, calibration_k
+ *          saturated, view_open_pct, calibration_k, mode
  * "saturated" is true when the EV hit the device's direct-sun limit (those
  * rows underestimate real light). "view_open_pct" (0-100, empty if unknown)
  * tells how much of the camera view was open sky - a low value means something
  * blocked part of the view, which makes auto-exposure read too HIGH.
  * "calibration_k" is the k multiplier that was in effect for that sample.
+ * "mode" is Manual, Auto-Mode (driver ignored manual exposure), each possibly
+ * suffixed with " Forced-Save" (overtime safety net kicked in).
  */
 object CsvStore {
 
@@ -37,23 +39,25 @@ object CsvStore {
         context: Context,
         exposureSeconds: Double, iso: Double, aperture: Double,
         ev100: Double, lux: Double, ppfd: Double,
-        saturated: Boolean, viewOpenPct: Int, calibrationK: Double
+        saturated: Boolean, viewOpenPct: Int, calibrationK: Double,
+        mode: String
     ): File {
         val f = todayFile(context)
         if (!f.exists()) {
             f.writeText(
-                "timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd,saturated,view_open_pct,calibration_k\n"
+                "timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd,saturated,view_open_pct,calibration_k,mode\n"
             )
         }
         val ts = DeviceProfile.timestamp_ISO8601(System.currentTimeMillis())
         f.appendText(
             String.format(
                 Locale.US,
-                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f,%s,%s,%.3f\n",
+                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f,%s,%s,%.3f,%s\n",
                 ts, exposureSeconds, iso, aperture, ev100, lux, ppfd,
                 if (saturated) "true" else "false",
                 if (viewOpenPct < 0) "" else viewOpenPct.toString(),
-                calibrationK
+                calibrationK,
+                mode
             )
         )
         return f

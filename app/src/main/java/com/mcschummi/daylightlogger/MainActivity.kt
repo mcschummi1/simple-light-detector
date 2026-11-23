@@ -319,13 +319,14 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        // AE metering note: only if the camera cannot meter the center region
-        // the user MUST aim a bit off the dark wall or readings go too high.
-        txtAeNote.setText(
-            if (!CameraEngine.isOpen || CameraEngine.aeMeteringSupported)
-                R.string.ae_note_supported
-            else R.string.ae_note_unsupported
-        )
+        // Exposure mode note: manual (best), center AE metering, or the
+        // aim-left advice when neither is available.
+        txtAeNote.text = when {
+            !CameraEngine.isOpen -> getString(R.string.ae_note_wait)
+            LightStateMachine.isManual() -> getString(R.string.ae_note_manual)
+            CameraEngine.aeMeteringSupported -> getString(R.string.ae_note_supported)
+            else -> getString(R.string.ae_note_unsupported)
+        }
         chart.invalidate()   // redraw today's lux curve
     }
 

@@ -28,21 +28,33 @@ DLI   = sum(ppfd * interval_s) / 1,000,000   (mol/m2/day, today so far)
 
   `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated`
 
-  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated, view_open_pct, calibration_k`
+  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated, view_open_pct, calibration_k, mode`
 
   The `saturated` column is `true` for samples taken with bright direct sun in
   view (sensor maxing out - those rows underestimate real light).
   `view_open_pct` (0-100, empty if unknown) shows how much of the view was open
-  sky - a low value means something (a wall) blocked part of the view, which
-  pushes auto-exposure and thus the lux numbers too HIGH.
+  sky - a low value means something (a wall) blocked part of the view.
   `calibration_k` records the exact k multiplier used for that sample.
+  `mode` is `Manual`, `Auto-Mode`, each possibly suffixed ` Forced-Save`.
 
   "Export CSV" shares today's file through the system share sheet.
   "Clear data" (in Settings and on the main screen) deletes everything after a
   confirmation dialog.
+- **Predictive 10-second state machine**: cycles align to exact round clock
+  times (12:00:00, 12:00:10, ...). A luma-histogram dialer pre-tunes exposure
+  during the idle time, saves land right on the clock mark, and a 20 s
+  overtime safety net force-saves (flagged `Forced-Save`) if the camera is
+  struggling, then re-syncs to the next round time.
+- **Hybrid auto-manual exposure**: the app tries to disable auto-exposure
+  (`CONTROL_AE_MODE_OFF` + fixed ISO/exposure time) — this specific J3
+  driver often accepts it. Every frame, the reported values are verified
+  against the requested ones; if the driver silently ignores manual control
+  the app falls back to reading whatever AE chose and logs the row as
+  `Auto-Mode` in the CSV. Manual mode also means the dark wall no longer
+  biases the readings at all.
 - Readings shown on screen update live every second straight from the camera
-  frames; CSV samples average ~10–16 frames (dropping 25% outlier frames) and
-  the first ~10 frames after opening are skipped so auto-exposure can settle.
+  frames; CSV samples average the cycle's frames (dropping 25% outlier frames)
+  and the first ~10 frames after opening are skipped so exposure can settle.
 
 ## Device modes (dedicated + optional compatibility)
 

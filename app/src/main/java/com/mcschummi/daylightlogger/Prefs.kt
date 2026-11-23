@@ -17,7 +17,8 @@ object Prefs {
     fun get(context: Context): android.content.SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-    fun intervalSeconds(context: Context): Int = get(context).getInt(KEY_INTERVAL, 60)
+    /** Predictive state machine: 10 s cycles aligned to exact clock marks. */
+    fun intervalSeconds(context: Context): Int = get(context).getInt(KEY_INTERVAL, 10)
 
     /** Default k (2.5) if the user has typed nothing. */
     fun manualK(context: Context): Double {

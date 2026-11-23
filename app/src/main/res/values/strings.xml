@@ -54,8 +54,10 @@
     <string name="cleared_toast">All data cleared</string>
 
     <string name="disclaimer">Readings are approximate (around ±30%): the phone lens is not a real lux meter. Bright direct sunlight in view can saturate the sensor. Place phone horizontally, back camera facing straight out the window.</string>
+    <string name="ae_note_wait">Exposure mode: waiting for the camera…</string>
     <string name="ae_note_unsupported">This phone has NO AE metering-region support: aim the phone slightly to the LEFT, away from dark walls, to prevent AE overexposure.</string>
     <string name="ae_note_supported">AE metering: center of frame (dark wall on the right is partly ignored).</string>
+    <string name="ae_note_manual">Hybrid mode: manual exposure locked - the dark wall does NOT affect the readings (driver verified).</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
