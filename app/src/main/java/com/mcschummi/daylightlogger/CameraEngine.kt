@@ -322,7 +322,10 @@ object CameraEngine {
             LogState.addSample(lux, ev, ppfd, meanIso, meanExposure, meanAperture, intervalSec)
             if (LogState.logging) {
                 try {
-                    CsvStore.appendSample(context, meanExposure, meanIso, meanAperture, ev, lux, ppfd)
+                    val saturated = ev >= profile.saturationEv100
+                    CsvStore.appendSample(
+                        context, meanExposure, meanIso, meanAperture, ev, lux, ppfd, saturated
+                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "CSV write failed", e)
                 }

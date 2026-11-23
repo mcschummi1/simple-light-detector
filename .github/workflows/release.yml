@@ -1,0 +1,39 @@
+name: Release
+
+# Triggered by pushing a tag like v0.1.0. Builds the APK and publishes a
+# GitHub Release with the APK attached, so the phone can install it directly.
+# Install over the old version as long as versionCode was bumped and the
+# applicationId stayed the same.
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk "DaylightLogger-${GITHUB_REF_NAME}.apk"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "DaylightLogger $GITHUB_REF_NAME" \
+            --notes "Camera-based daylight logger for Galaxy J3 (2017). Install the .apk; it installs over previous versions with the same or higher versionCode." \
+            "DaylightLogger-${GITHUB_REF_NAME}.apk"

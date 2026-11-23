@@ -10,7 +10,9 @@ import java.util.Locale
  * One CSV file per day, in app storage:
  *   /data/data/<pkg>/files/logs/daylight_2024-05-01.csv
  *
- * Columns: timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd
+ * Columns: timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated
+ * "saturated" is true when the EV hit the device's direct-sun limit; those
+ * rows underestimate the real light level.
  */
 object CsvStore {
 
@@ -30,18 +32,20 @@ object CsvStore {
     fun appendSample(
         context: Context,
         exposureSeconds: Double, iso: Double, aperture: Double,
-        ev100: Double, lux: Double, ppfd: Double
+        ev100: Double, lux: Double, ppfd: Double,
+        saturated: Boolean
     ): File {
         val f = todayFile(context)
         if (!f.exists()) {
-            f.writeText("timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd\n")
+            f.writeText("timestamp,exposure_time_s,iso,aperture,ev100,lux,ppfd,saturated\n")
         }
         val ts = DeviceProfile.timestamp_ISO8601(System.currentTimeMillis())
         f.appendText(
             String.format(
                 Locale.US,
-                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f\n",
-                ts, exposureSeconds, iso, aperture, ev100, lux, ppfd
+                "%s,%.8f,%.0f,%.2f,%.3f,%.1f,%.2f,%s\n",
+                ts, exposureSeconds, iso, aperture, ev100, lux, ppfd,
+                if (saturated) "true" else "false"
             )
         )
         return f

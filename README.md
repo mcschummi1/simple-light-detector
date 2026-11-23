@@ -26,7 +26,10 @@ DLI   = sum(ppfd * interval_s) / 1,000,000   (mol/m2/day, today so far)
   partial wake lock. The camera reopens automatically if it is disconnected.
 - **CSV log**: one ISO-8601-stamped CSV per day in app storage:
 
-  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd`
+  `timestamp, exposure_time_s, iso, aperture, ev100, lux, ppfd, saturated`
+
+  The `saturated` column is `true` for samples taken in direct sun where the
+  tiny J3 sensor maxed out - those rows underestimate the real light level.
 
   "Export CSV" shares today's file through the system share sheet.
   "Clear data" (in Settings and on the main screen) deletes everything after a
@@ -74,6 +77,16 @@ reflected light.
    notification appears. Press **Stop logging** when done.
 4. Calibrate once in **⚙ Settings → Calibration** using a known lux value.
 5. Use **Export CSV** to share the data (WhatsApp, Drive, email, …).
+
+## Releases, versions and updating
+
+- Version is **v0.1.0** (`versionName "0.1.0"`, `versionCode 1`).
+- GitHub Actions builds a debug APK on every push (see the **CI** tab) and
+  publishes a GitHub **Release** with the APK whenever a `vX.Y.Z` tag is pushed.
+- Updating: install the new APK over the old one — no uninstall needed — as
+  long as the `applicationId` is unchanged and `versionCode` was bumped.
+- To cut a release: bump `versionCode` (and `versionName`) in
+  `app/build.gradle`, commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 ## Project layout
 
