@@ -3,6 +3,7 @@ package com.mcschummi.daylightlogger
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +18,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import kotlin.math.max
 
 /**
  * Main screen.
@@ -56,9 +58,12 @@ class MainActivity : AppCompatActivity() {
 
     private val surfaceListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(st: SurfaceTexture, w: Int, h: Int) {
+            applyPreviewTransform()
             if (wantPreviewSurface) attachPreview(Surface(st))
         }
-        override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {}
+        override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
+            applyPreviewTransform()
+        }
         override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
             attachPreview(null)
             return true
@@ -190,6 +195,19 @@ class MainActivity : AppCompatActivity() {
         if (surface != null && !CameraEngine.isOpen) CameraEngine.start(this)
     }
 
+    /** The camera delivers 640x480 landscape; rotate/scale it into the portrait view. */
+    private fun applyPreviewTransform() {
+        if (!preview.isAvailable) return
+        val w = preview.width.toFloat(); val h = preview.height.toFloat()
+        if (w <= 0f || h <= 0f) return
+        val bufferW = 480f; val bufferH = 640f   // frame size after 90° rotation
+        val scale = max(w / bufferW, h / bufferH)
+        val m = Matrix()
+        m.setScale(scale, scale, w / 2f, h / 2f)
+        m.postRotate(90f, w / 2f, h / 2f)
+        preview.setTransform(m)
+    }
+
     private fun exportCsv() {
         val file = CsvStore.todayFile(this)
         if (!file.exists()) {
@@ -229,12 +247,21 @@ class MainActivity : AppCompatActivity() {
     private fun refreshUi() {
         updateStartStopButton()
         val st = LogState
-        if (st.lastLux <= 0.0) {
-            txtStatus.setText(if (st.logging) R.string.status_first_sample else R.string.status_stopped)
-            txtLux.text = getString(R.string.lux_value, 0.0)
-            txtEv.text = getString(R.string.ev_value, 0.0)
-            txtPpfd.text = getString(R.string.ppfd_value, 0.0)
-        } else {
+        val profile = DeviceProfile.resolve(this)
+
+        // LIVE reading: straight from the newest camera frame, every second.
+        val liveEv = CameraEngine.currentEv100(this)
+        if (liveEv != null) {
+            val lux = LightMath.lux(liveEv, Prefs.effectiveK(this))
+            txtStatus.text = getString(
+                R.string.status_live, st.sampleCountToday, st.maxLuxToday
+            )
+            txtLux.text = getString(R.string.lux_value, lux)
+            txtEv.text = getString(R.string.ev_value, liveEv)
+            txtPpfd.text = getString(R.string.ppfd_value, LightMath.ppfd(lux))
+            // Direct sun melts a small phone sensor: warn the user.
+            if (liveEv >= profile.saturationEv100) txtLux.append(getString(R.string.saturated))
+        } else if (st.lastLux > 0.0) {
             txtStatus.text = getString(
                 R.string.status_running,
                 DeviceProfile.dayKey(System.currentTimeMillis()), st.sampleCountToday
@@ -242,13 +269,16 @@ class MainActivity : AppCompatActivity() {
             txtLux.text = getString(R.string.lux_value, st.lastLux)
             txtEv.text = getString(R.string.ev_value, st.lastEv100)
             txtPpfd.text = getString(R.string.ppfd_value, st.lastPpfd)
-            // Direct sun melts a small phone sensor: warn the user.
-            val profile = DeviceProfile.resolve(this)
             if (st.lastEv100 >= profile.saturationEv100) txtLux.append(getString(R.string.saturated))
+        } else {
+            txtStatus.setText(if (st.logging) R.string.status_first_sample else R.string.status_stopped)
+            txtLux.text = getString(R.string.lux_value, 0.0)
+            txtEv.text = getString(R.string.ev_value, 0.0)
+            txtPpfd.text = getString(R.string.ppfd_value, 0.0)
         }
         txtDli.text = getString(R.string.dli_value, st.dliToday)
         txtK.text = getString(R.string.k_value, Prefs.effectiveK(this))
-        txtDevice.text = DeviceProfile.resolve(this).label
+        txtDevice.text = profile.label
         chart.invalidate()   // redraw today's lux curve
     }
 

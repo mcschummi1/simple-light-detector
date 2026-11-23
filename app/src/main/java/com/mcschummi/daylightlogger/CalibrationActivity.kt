@@ -46,6 +46,7 @@ class CalibrationActivity : AppCompatActivity() {
         // (The main screen usually opened it already; this is a safety net.)
         CameraEngine.start(this)
         refresh()
+        refreshEvOnly()   // keeps the EV line fresh once per second
     }
 
     override fun onPause() {
@@ -55,9 +56,11 @@ class CalibrationActivity : AppCompatActivity() {
     }
 
     private fun refresh() {
-        val ev = LogState.lastEv100
-        val hasReading = LogState.lastLux > 0.0
-        txtCurrentEv.text = if (hasReading) {
+        // Prefer the live EV from the newest camera frame so calibration is
+        // instant; fall back to the last logged sample.
+        val liveEv = CameraEngine.currentEv100(this)
+        val ev = liveEv ?: LogState.lastEv100.takeIf { LogState.lastLux > 0.0 }
+        txtCurrentEv.text = if (ev != null) {
             getString(R.string.calib_current_ev, ev)
         } else {
             getString(R.string.calib_no_camera)
@@ -74,17 +77,28 @@ class CalibrationActivity : AppCompatActivity() {
         txtExplain.text = getString(R.string.calib_explain)
     }
 
+    /** Update only the EV line while staying on this screen. */
+    private fun refreshEvOnly() {
+        val liveEv = CameraEngine.currentEv100(this)
+        val ev = liveEv ?: LogState.lastEv100.takeIf { LogState.lastLux > 0.0 }
+        if (ev != null) {
+            txtCurrentEv.text = getString(R.string.calib_current_ev, ev)
+            txtCurrentEv.postDelayed({ if (!isFinishing) refreshEvOnly() }, 1000)
+        }
+    }
+
     private fun addPoint() {
         val refLux = editReference.text.toString().toDoubleOrNull()
         if (refLux == null || refLux <= 0) {
             Toast.makeText(this, R.string.bad_ref_lux, Toast.LENGTH_SHORT).show()
             return
         }
-        if (LogState.lastLux <= 0.0) {
+        val ev = CameraEngine.currentEv100(this)
+            ?: LogState.lastEv100.takeIf { LogState.lastLux > 0.0 }
+        if (ev == null) {
             Toast.makeText(this, R.string.calib_no_camera, Toast.LENGTH_LONG).show()
             return
         }
-        val ev = LogState.lastEv100
         val k = refLux / Math.pow(2.0, ev)
         Prefs.addCalibrationPoint(this, k)
         editReference.setText("")

@@ -19,6 +19,7 @@ object LogState {
 
     // Today's Daily Light Integral (mol/m2/day)
     var dliToday = 0.0
+    var maxLuxToday = 0.0
     var dayOfDli = DeviceProfile.dayKey(System.currentTimeMillis())
 
     // Today's lux history for the chart: (timeMillis, lux)
@@ -37,6 +38,7 @@ object LogState {
         lastLux = lux; lastEv100 = ev100; lastPpfd = ppfd
         isoUsed = iso; exposureUsedS = exposureS; apertureUsed = aperture
         dliToday += LightMath.dliStep(ppfd, intervalSeconds)
+        if (lux > maxLuxToday) maxLuxToday = lux
         sampleCountToday++
         luxHistory.add(System.currentTimeMillis() to lux)
         if (luxHistory.size > 1440) luxHistory.removeAt(0)   // cap: 1 day at 60 s
@@ -49,6 +51,7 @@ object LogState {
 
     fun dliReset() {
         dliToday = 0.0
+        maxLuxToday = 0.0
         sampleCountToday = 0
         luxHistory.clear()
     }

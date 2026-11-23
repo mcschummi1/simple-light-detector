@@ -28,7 +28,8 @@
 
     <string name="status_stopped">Not logging - press Start</string>
     <string name="status_first_sample">Logging: waiting for first sample…</string>
-    <string name="status_running">Logging %1$s: %2$d samples</string>
+    <string name="status_live">Live · %1$d logged today · peak %2$.0f lux</string>
+    <string name="status_running">Log %1$s: %2$d samples</string>
     <string name="saturated"> ⚠ direct sun (sensor saturating!)</string>
     <string name="camera_needed">Camera permission is required to measure light.</string>
     <string name="started_toast">Logging started - keep the phone face up</string>

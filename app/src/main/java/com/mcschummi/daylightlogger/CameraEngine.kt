@@ -107,6 +107,41 @@ object CameraEngine {
         if (isOpen && device != null) rebuildSession()
     }
 
+    /**
+     * EV100 from the LATEST camera frame (no need to wait for a full sample).
+     * Used for the live on-screen reading and quick calibration.
+     */
+    fun currentEv100(context: Context): Double? {
+        val f = synchronized(recentFrames) { recentFrames.lastOrNull() } ?: return null
+        return LightMath.ev100(f.aperture, f.exposureSeconds, f.iso)
+    }
+
+    /** Apply a changed sample interval immediately (called from Settings). */
+    @Synchronized
+    fun reschedule() {
+        val handler = workerHandler
+        val ctx = appContext
+        if (handler == null || ctx == null) {
+            sampleScheduled = false
+            return
+        }
+        handler.removeCallbacks(sampleTask)
+        sampleScheduled = true
+        handler.postDelayed(sampleTask, Prefs.intervalSeconds(ctx) * 1000L)
+    }
+
+    /**
+     * Average that ignores bad frames: sorts the values and drops the lowest
+     * and highest 25% (auto-exposure jumps mid-burst, backlights flicker, ...).
+     */
+    private fun trimmedMean(values: List<Double>): Double {
+        if (values.size <= 2) return values.average()
+        val sorted = values.sorted()
+        val cut = sorted.size / 4
+        if (cut == 0) return sorted.average()
+        return sorted.subList(cut, sorted.size - cut).average()
+    }
+
     // ------------------------------------------------------------------ internals
 
     private fun findBackCamera(): String? {
@@ -276,8 +311,8 @@ object CameraEngine {
                 workerHandler?.postDelayed(this, (intervalSec * 1000).toLong())
                 return
             }
-            val meanExposure = frames.map { it.exposureSeconds }.average()
-            val meanIso = frames.map { it.iso }.average()
+            val meanExposure = trimmedMean(frames.map { it.exposureSeconds })
+            val meanIso = trimmedMean(frames.map { it.iso })
             val meanAperture = frames.map { it.aperture }.average()
 
             val ev = LightMath.ev100(meanAperture, meanExposure, meanIso)

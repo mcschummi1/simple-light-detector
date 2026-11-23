@@ -127,6 +127,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             )
             .apply()
+        CameraEngine.reschedule()   // new interval takes effect immediately
         finish()
     }
 

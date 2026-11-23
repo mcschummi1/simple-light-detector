@@ -10,7 +10,8 @@ android {
     defaultConfig {
         applicationId "com.mcschummi.daylightlogger"
         minSdk 24          // Galaxy J3 (2017) ships with Android 7 (API 24)
-        targetSdk 34       // newest allowed while keeping the code simple
+        targetSdk 28       // matches the J3's last official Android (9 Pie),
+                           // and avoids the tighter background limits of newer targets
         versionCode 1
         versionName "1.0"
     }

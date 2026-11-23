@@ -31,8 +31,9 @@ DLI   = sum(ppfd * interval_s) / 1,000,000   (mol/m2/day, today so far)
   "Export CSV" shares today's file through the system share sheet.
   "Clear data" (in Settings and on the main screen) deletes everything after a
   confirmation dialog.
-- averages ~10–16 frames per sample and skips the first ~10 frames after opening
-  so auto-exposure can settle.
+- Readings shown on screen update live every second straight from the camera
+  frames; CSV samples average ~10–16 frames (dropping 25% outlier frames) and
+  the first ~10 frames after opening are skipped so auto-exposure can settle.
 
 ## Device modes (dedicated + optional compatibility)
 
